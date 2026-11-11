@@ -34,7 +34,18 @@ jobs:
           mv /tmp/lib_backup lib
           mv /tmp/pubspec_backup.yaml pubspec.yaml
 
+      - name: Force Kotlin 2.0.10 and compileSdk 35
+        run: |
+          # رفع Kotlin في settings.gradle
+          sed -i 's/id "org.jetbrains.kotlin.android" version ".*"/id "org.jetbrains.kotlin.android" version "2.0.10"/' android/settings.gradle
+          # رفع compileSdk و targetSdk في build.gradle
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 35/' android/app/build.gradle
+          sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 35/' android/app/build.gradle
+          # إصلاح aapt2 لـ SDK 35
+          echo "android.aapt2Version=8.6.1-11315950" >> android/gradle.properties
+
       - run: flutter pub get
+      - run: flutter clean
       - run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4
