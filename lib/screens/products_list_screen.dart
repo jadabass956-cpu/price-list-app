@@ -76,7 +76,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       return;
     }
     try {
-      await PdfService.generateAndPrint(_products, _settings);
+      await PdfService.generateAndSave(_products, _settings);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('حدث خطأ: $e')));
     }

@@ -20,6 +20,7 @@ dependencies:
   printing: ^5.11.1
   bidi: ^2.0.10
   shared_preferences: ^2.2.2
+  open_filex: ^4.4.0
 
 dev_dependencies:
   flutter_test:

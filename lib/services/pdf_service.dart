@@ -1,13 +1,14 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import '../models/product.dart';
 import '../models/app_settings.dart';
 
 class PdfService {
-  static Future<void> generateAndPrint(List<Product> products, AppSettings settings) async {
+  static Future<void> generateAndSave(List<Product> products, AppSettings settings) async {
     final pdf = pw.Document();
     final fontData = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
     final ttf = pw.Font.ttf(fontData);
@@ -20,7 +21,6 @@ class PdfService {
 
     for (var i = 0; i < pages.length; i++) {
       final pageProducts = pages[i];
-
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -30,7 +30,6 @@ class PdfService {
               textDirection: pw.TextDirection.rtl,
               child: pw.Column(
                 children: [
-                  // ======= الهيدر (Header) =======
                   pw.Row(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -56,16 +55,14 @@ class PdfService {
                   pw.SizedBox(height: 10),
                   pw.Divider(thickness: 1, color: PdfColors.grey400),
                   pw.SizedBox(height: 10),
-
-                  // ======= الجدول (Table) =======
                   pw.Expanded(
                     child: pw.Table(
                       border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
                       columnWidths: {
-                        0: const pw.FixedColumnWidth(50), // الصورة
-                        1: const pw.FlexColumnWidth(3),  // الاسم
-                        2: const pw.FlexColumnWidth(1.5),// التصنيف
-                        3: const pw.FlexColumnWidth(1),  // السعر
+                        0: const pw.FixedColumnWidth(50),
+                        1: const pw.FlexColumnWidth(3),
+                        2: const pw.FlexColumnWidth(1.5),
+                        3: const pw.FlexColumnWidth(1),
                       },
                       children: [
                         pw.TableRow(
@@ -99,23 +96,19 @@ class PdfService {
                       ],
                     ),
                   ),
-                  
                   pw.SizedBox(height: 10),
-                  // ======= الفوتر (Footer) =======
                   pw.Divider(thickness: 0.5, color: PdfColors.grey300),
                   pw.SizedBox(height: 5),
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.center,
                     children: [
                       if (settings.phone.isNotEmpty) ...[
-                        pw.Icon(const pw.IconData(0xe0b0), color: PdfColors.blue800, size: 14), // أيقونة هاتف
-                        pw.SizedBox(width: 4),
+                        pw.Text('📞 ', style: pw.TextStyle(font: ttf, fontSize: 12)),
                         pw.Text(settings.phone, style: pw.TextStyle(font: ttf, fontSize: 11)),
                         pw.SizedBox(width: 20),
                       ],
                       if (settings.whatsapp.isNotEmpty) ...[
-                        pw.Icon(const pw.IconData(0xe158), color: PdfColors.green800, size: 14), // أيقونة رسالة (واتساب)
-                        pw.SizedBox(width: 4),
+                        pw.Text('💬 ', style: pw.TextStyle(font: ttf, fontSize: 12)),
                         pw.Text(settings.whatsapp, style: pw.TextStyle(font: ttf, fontSize: 11)),
                       ],
                     ],
@@ -128,10 +121,13 @@ class PdfService {
       );
     }
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'Price_List.pdf',
-    );
+    // حفظ الملف وفتحه مباشرة
+    final output = await getTemporaryDirectory();
+    final file = File("${output.path}/Price_List_${DateTime.now().millisecondsSinceEpoch}.pdf");
+    await file.writeAsBytes(await pdf.save());
+    
+    // فتح الملف بتطبيق PDF الموجود على الجهاز
+    await OpenFilex.open(file.path);
   }
 
   static pw.Widget _buildCell(String text, pw.Font font, {bool isHeader = false}) {
