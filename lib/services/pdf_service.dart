@@ -10,7 +10,7 @@ import '../models/app_settings.dart';
 class PdfService {
   static Future<void> generateAndSave(List<Product> products, AppSettings settings) async {
     final pdf = pw.Document();
-    final fontData = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
+    final fontData = await rootBundle.load('assets/fonts/Tajawal-Regular.ttf');
     final ttf = pw.Font.ttf(fontData);
 
     final int itemsPerPage = 10;

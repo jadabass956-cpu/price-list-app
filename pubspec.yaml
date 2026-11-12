@@ -32,6 +32,6 @@ flutter:
   assets:
     - assets/fonts/
   fonts:
-    - family: Cairo
+    - family: Tajawal
       fonts:
-        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/Tajawal-Regular.ttf
