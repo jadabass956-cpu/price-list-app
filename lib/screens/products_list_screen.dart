@@ -1,8 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/product.dart';
+import '../models/app_settings.dart';
 import '../services/database_helper.dart';
+import '../services/settings_service.dart';
+import '../services/pdf_service.dart';
 import 'product_form_screen.dart';
+import 'settings_screen.dart';
 
 class ProductsListScreen extends StatefulWidget {
   const ProductsListScreen({super.key});
@@ -12,6 +16,7 @@ class ProductsListScreen extends StatefulWidget {
 
 class _ProductsListScreenState extends State<ProductsListScreen> {
   List<Product> _products = [];
+  AppSettings _settings = AppSettings();
   bool _loading = true;
 
   @override
@@ -23,7 +28,12 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     final list = await DatabaseHelper.instance.getAll();
-    setState(() { _products = list; _loading = false; });
+    final settings = await SettingsService.load();
+    setState(() { 
+      _products = list; 
+      _settings = settings;
+      _loading = false; 
+    });
   }
 
   Future<void> _openForm([Product? product]) async {
@@ -32,6 +42,14 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       MaterialPageRoute(builder: (_) => ProductFormScreen(product: product)),
     );
     if (saved == true) _load();
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+    );
+    _load(); // إعادة تحميل الإعدادات بعد الرجوع
   }
 
   Future<void> _delete(Product p) async {
@@ -52,10 +70,37 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
+  Future<void> _exportPdf() async {
+    if (_products.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لا يوجد منتجات لتصديرها')));
+      return;
+    }
+    try {
+      await PdfService.generateAndPrint(_products, _settings);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('حدث خطأ: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('قائمة الأسعار'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('قائمة الأسعار'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'إعدادات الشركة',
+            onPressed: _openSettings,
+          ),
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'تصدير PDF',
+            onPressed: _exportPdf,
+          ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _products.isEmpty
