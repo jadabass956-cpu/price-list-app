@@ -10,8 +10,11 @@ import '../models/app_settings.dart';
 class PdfService {
   static Future<void> generateAndSave(List<Product> products, AppSettings settings) async {
     final pdf = pw.Document();
-    final fontData = await rootBundle.load('assets/fonts/Tajawal-Regular.ttf');
-    final ttf = pw.Font.ttf(fontData);
+    
+    // تحميل الخطوط
+    final ttf = pw.Font.ttf(await rootBundle.load('assets/fonts/Tajawal-Regular.ttf'));
+    final iconPhone = pw.Font.ttf(await rootBundle.load('assets/fonts/fa-solid-900.ttf'));
+    final iconBrands = pw.Font.ttf(await rootBundle.load('assets/fonts/fa-brands-400.ttf'));
 
     final int itemsPerPage = 10;
     final List<List<Product>> pages = [];
@@ -30,6 +33,7 @@ class PdfService {
               textDirection: pw.TextDirection.rtl,
               child: pw.Column(
                 children: [
+                  // الهيدر
                   pw.Row(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -56,6 +60,7 @@ class PdfService {
                   pw.Divider(thickness: 1, color: PdfColors.grey400),
                   pw.SizedBox(height: 10),
                   
+                  // الجدول
                   pw.Expanded(
                     child: pw.Table(
                       border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
@@ -108,20 +113,35 @@ class PdfService {
                   pw.Divider(thickness: 0.5, color: PdfColors.grey300),
                   pw.SizedBox(height: 5),
                   
+                  // الفوتر (أيقونات الهاتف والواتساب)
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.center,
                     children: [
                       if (settings.phone.isNotEmpty) ...[
                         pw.UrlLink(
                           destination: 'tel:${settings.phone}',
-                          child: pw.Text('اتصال: ${settings.phone}', style: pw.TextStyle(font: ttf, fontSize: 12, color: PdfColors.blue900, decoration: pw.TextDecoration.underline)),
+                          child: pw.Row(
+                            children: [
+                              // أيقونة الهاتف (FontAwesome Unicode \uF095)
+                              pw.Text('\uF095', style: pw.TextStyle(font: iconPhone, fontSize: 14, color: PdfColors.blue900)),
+                              pw.SizedBox(width: 5),
+                              pw.Text(settings.phone, style: pw.TextStyle(font: ttf, fontSize: 12, color: PdfColors.blue900, decoration: pw.TextDecoration.underline)),
+                            ]
+                          ),
                         ),
-                        pw.SizedBox(width: 30),
+                        pw.SizedBox(width: 40), // مسافة بين الهاتف والواتساب
                       ],
                       if (settings.whatsapp.isNotEmpty) ...[
                         pw.UrlLink(
                           destination: 'https://wa.me/${settings.whatsapp}',
-                          child: pw.Text('واتساب: ${settings.whatsapp}', style: pw.TextStyle(font: ttf, fontSize: 12, color: PdfColors.green900, decoration: pw.TextDecoration.underline)),
+                          child: pw.Row(
+                            children: [
+                              // أيقونة الواتساب (FontAwesome Unicode \uF232)
+                              pw.Text('\uF232', style: pw.TextStyle(font: iconBrands, fontSize: 14, color: PdfColors.green900)),
+                              pw.SizedBox(width: 5),
+                              pw.Text(settings.whatsapp, style: pw.TextStyle(font: ttf, fontSize: 12, color: PdfColors.green900, decoration: pw.TextDecoration.underline)),
+                            ]
+                          ),
                         ),
                       ],
                     ],
